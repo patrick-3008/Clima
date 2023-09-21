@@ -1,14 +1,20 @@
 import Foundation
 
+protocol WeatherManagerDelegate {
+    func didUpdateWeather(_ weatherManger: WeatherManager,weather: WeatherModel)
+    func didFailWithError(error: Error)
+}
+
 struct WeatherManager {
     let weatherUrl = "https://api.openweathermap.org/data/2.5/weather?appid=935d391d38090c00a2e92f2a0bac251c&units=metric"
+    var delegate: WeatherManagerDelegate?
     
     func fetchWeather(cityName: String) {
         let urlString = "\(weatherUrl)&q=\(cityName)"
-        performRequest(urlString: urlString)
+        performRequest(with: urlString)
     }
     
-    func performRequest(urlString: String) {
+    func performRequest(with urlString: String) {
         // 1. Create a Url
         if let url = URL(string: urlString) {
             
@@ -19,10 +25,13 @@ struct WeatherManager {
             let task = session.dataTask(with: url, completionHandler: { (data, reponse, error) in
                 if error != nil {
                     print("give a session task error : \(error!)")
+                    self.delegate?.didFailWithError(error: error!)
                     return
                 }
                 if let safeData = data {
-                    parseJSON(weatherData: safeData)
+                    if let weather = self.parseJSON(safeData) {
+                        self.delegate?.didUpdateWeather(self, weather: weather)
+                    }
                 }
             })
             
@@ -31,7 +40,7 @@ struct WeatherManager {
         }
     }
     
-    func parseJSON(weatherData: Data){
+    func parseJSON(_ weatherData: Data) -> WeatherModel? {
         let decoder = JSONDecoder()
         do {
            let decodedData = try decoder.decode(WeatherJson.self, from: weatherData)
@@ -40,9 +49,11 @@ struct WeatherManager {
             let name = decodedData.name
             
             let weather = WeatherModel(conditionId: id, cityName: name, temperature: temp)
-            weather.conditionName
+            return weather
         } catch {
             print(error)
+            delegate?.didFailWithError(error: error)
+            return nil
         }
     }
         
