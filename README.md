@@ -43,6 +43,7 @@ Clima is built using UIKit, one of the core frameworks for creating iOS applicat
 ## License
 
 Clima is licensed under the MIT License. You are free to use, modify, and distribute it as needed.
+
 email: patricknaashat@yahoo.com
 
 Stay informed about the weather with Clima, and have a great experience! 🌦️📱
